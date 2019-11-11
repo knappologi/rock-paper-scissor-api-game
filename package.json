@@ -1,0 +1,23 @@
+{
+  "name": "rock-paper-scissor-api-game",
+  "version": "1.0.0",
+  "description": "Rock-paper-scissor game using API calls!",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/knappologi/rock-paper-scissor-api-game.git"
+  },
+  "author": "Fredrika H",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/knappologi/rock-paper-scissor-api-game/issues"
+  },
+  "homepage": "https://github.com/knappologi/rock-paper-scissor-api-game#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
