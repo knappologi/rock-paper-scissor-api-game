@@ -26,14 +26,22 @@ router.post('/:id/join', (req, res, next) => {
 });
 
 /*
-GET /api/games/{id}/join 
-Required: valid game ID and player name.
-Returns: success message or error message (bad request)
+GET /api/games/{id}
+Required: valid game ID 
+Returns: game status, player names and game id
 */
 router.get('/:id', (req, res, next) => {
   gameController.getGameStatus(req, res, next);
 });
 
+/*
+POST /api/games/{id}/move
+Required: valid game ID, player name and valid move.
+Returns: success message or error message (bad request)
+*/
+router.post('/:id/move', (req, res) => {
+  gameController.addMove(req, res);
+});
 
 
 
