@@ -10,8 +10,9 @@ exports.createNewRpsGame = (req, res, next) => {
   checkName(req, res);
   if (!res.headersSent) {
     const newGameId = initiateNewRpsGame(req.query.name);
-    res.status(200).json({
-      message: `Send the following url to a friend to join with a POST-request: http://localhost:3002/api/games/${newGameId}/join`
+    res.status(201).json({
+      message: `Send the following url to a friend to join with a POST-request: http://localhost:3002/api/games/${newGameId}/join`,
+      gameId: newGameId
     });
   }
 };
@@ -35,16 +36,23 @@ exports.joinGame = (req, res, next) => {
 const addPlayerToGame = (gameToJoin, playerName, res) => {
   gameToJoin.playerTwo = { name: playerName, move: '' };
   gameToJoin.gameStatus =
-    'Player two has joined. Waiting for both players moves.';
+    'In progress. Player two has joined. Waiting for both players moves.';
   res.status(200).json({
     message: `Welcome to game ${gameToJoin.id}, ${playerName}!`
   });
-}
+};
 
 exports.getGameStatus = (req, res, next) => {
   const gameToJoin = getGameById(req.params.id, res);
   if (!res.headersSent) {
-    res.status(200).json({ gameStatus: gameToJoin.gameStatus });
+    res
+      .status(200)
+      .json({
+        gameId: gameToJoin.id,
+        gameStatus: gameToJoin.gameStatus,
+        playerOne: gameToJoin.playerOne.name,
+        playerTwo: gameToJoin.playerTwo.name
+      });
   }
 };
 
@@ -74,7 +82,7 @@ const initiateNewRpsGame = playerName => {
     id: gameIndex,
     playerOne: { name: playerName, move: '' },
     playerTwo: { name: '', move: '' },
-    gameStatus: 'Game initated, waiting for player two to join.'
+    gameStatus: 'In progress. Game initated, waiting for player two to join.'
   });
   gameIndex++; //TODO: change to ULID / UUID
   return gameIndex - 1;
