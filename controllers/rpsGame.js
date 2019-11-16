@@ -4,13 +4,25 @@ const rpsValues = require('./rpsValues');
 const gameMoves = rpsValues.rpsGameMoves;
 const gameState = rpsValues.rpsGameState;
 
-exports.createNewRpsGame = (req, res, next) => {
+exports.createNewRpsGame = (req, res) => {
   validateName(req, res);
   if (!res.headersSent) {
     const newGameId = initiateNewRpsGame(req.query.name);
     res.status(201).json({
       message: `Send the following url to a friend to join with a POST-request: http://localhost:3002/api/games/${newGameId}/join`,
       gameId: newGameId
+    });
+  }
+};
+
+exports.getGameStatus = (req, res, next) => {
+  const gameToJoin = getGameById(req.params.id, res);
+  if (!res.headersSent) {
+    res.status(200).json({
+      gameId: gameToJoin.id,
+      gameStatus: gameToJoin.gameStatus,
+      playerOne: gameToJoin.playerOne.name,
+      playerTwo: gameToJoin.playerTwo.name
     });
   }
 };
@@ -39,18 +51,6 @@ const addPlayerToGame = (gameToJoin, playerName, res) => {
   });
 };
 
-exports.getGameStatus = (req, res, next) => {
-  const gameToJoin = getGameById(req.params.id, res);
-  if (!res.headersSent) {
-    res.status(200).json({
-      gameId: gameToJoin.id,
-      gameStatus: gameToJoin.gameStatus,
-      playerOne: gameToJoin.playerOne.name,
-      playerTwo: gameToJoin.playerTwo.name
-    });
-  }
-};
-
 exports.addMove = (req, res) => {
   const game = getGameById(req.params.id, res);
   if (!res.headersSent) {
@@ -59,17 +59,18 @@ exports.addMove = (req, res) => {
       game.gameStatus === gameState.WAITING_FOR_PLAYER_ONE_MOVE ||
       game.gameStatus === gameState.WAITING_FOR_PLAYER_TWO_MOVE
     ) {
-      validateMove(req, res);
-      if (!res.headersSent) {
+      if (validateMove(req, res)) {
         const player = validatePlayer(req, res, game);
-        if (player === '') {
-          res.status(401).json({
-            error: `Invalid player for game ${game.id}: ${req.query.name}`,
-            gameId: game.id,
-            gameStatus: game.gameStatus
-          });
-        } else {
-          addPlayerMove(player, res, req.query.move, game);
+        if (!res.headersSent) {
+          if (player === '') {
+            res.status(401).json({
+              error: `Invalid player for game ${game.id}: ${req.query.name}`,
+              gameId: game.id,
+              gameStatus: game.gameStatus
+            });
+          } else {
+            addPlayerMove(player, res, req.query.move, game);
+          }
         }
       }
     } else {
@@ -79,33 +80,6 @@ exports.addMove = (req, res) => {
         gameStatus: game.gameStatus
       });
     }
-  }
-};
-
-const validatePlayer = (req, res, game) => {
-  validateName(req, res);
-  if (!res.headersSent) {
-    if (game.playerOne.name === req.query.name) {
-      return game.playerOne;
-    } else if (game.playerTwo.name === req.query.name) {
-      return game.playerTwo;
-    } else {
-      return '';
-    }
-  }
-};
-
-const addPlayerMove = (player, res, move, game) => {
-  if (player.move.length > 0) {
-    res.status(401).json({
-      error: `You've already made a move in this game!`,
-      gameId: game.id,
-      gameStatus: game.gameStatus
-    });
-  } else {
-    player.move = move;
-    validateGameState(res, game);
-    res.status(200).json({ message: 'Your move has been recorded.' });
   }
 };
 
@@ -122,6 +96,17 @@ const validateGameState = (res, game) => {
   }
 };
 
+const validateMove = (req, res) => {
+  if (!req.query.move || !gameMoves.includes(req.query.move.toLowerCase())) {
+    res.status(400).json({
+      error: `Please provide a valid move (rock, paper or scissor) as a parameter.`
+    });
+    return false;
+  } else {
+    return true;
+  }
+};
+
 const validateName = (req, res) => {
   if (!req.query.name) {
     return res.status(400).json({
@@ -130,12 +115,41 @@ const validateName = (req, res) => {
   }
 };
 
-const validateMove = (req, res) => {
-  if (!req.query.move || !gameMoves.includes(req.query.move.toLowerCase())) {
-    return res.status(400).json({
-      error: `Please provide a valid move (rock, paper or scissor) as a parameter.`
-    });
+const validatePlayer = (req, res, game) => {
+  validateName(req, res);
+  if (!res.headersSent) {
+    if (game.playerOne.name === req.query.name) {
+      return game.playerOne;
+    } else if (game.playerTwo.name === req.query.name) {
+      return game.playerTwo;
+    } else {
+      return '';
+    }
   }
+};
+
+const initiateNewRpsGame = playerName => {
+  gameCollection.push({
+    id: gameIndex,
+    playerOne: { name: playerName, move: '' },
+    playerTwo: { name: '', move: '' },
+    gameStatus: gameState.INIT
+  });
+  gameIndex++; //TODO: change to ULID / UUID
+  return gameIndex - 1;
+};
+
+const getGameById = (gameId, res) => {
+  let foundGame = false;
+  gameCollection.map(game => {
+    if (+game.id === +gameId) {
+      foundGame = game;
+    }
+  });
+  if (!foundGame) {
+    res.send(`No game with id ${gameId} found!`);
+  }
+  return foundGame;
 };
 
 const getFinalGameState = game => {
@@ -162,26 +176,16 @@ const checkWinner = game => {
   }
 };
 
-const getGameById = (gameId, res) => {
-  let foundGame = false;
-  gameCollection.map(game => {
-    if (+game.id === +gameId) {
-      foundGame = game;
-    }
-  });
-  if (!foundGame) {
-    res.send(`No game with id ${gameId} found!`);
+const addPlayerMove = (player, res, move, game) => {
+  if (player.move.length > 0) {
+    res.status(401).json({
+      error: `You've already made a move in this game!`,
+      gameId: game.id,
+      gameStatus: game.gameStatus
+    });
+  } else {
+    player.move = move;
+    validateGameState(res, game);
+    res.status(200).json({ message: `Your move has been recorded.` });
   }
-  return foundGame;
-};
-
-const initiateNewRpsGame = playerName => {
-  gameCollection.push({
-    id: gameIndex,
-    playerOne: { name: playerName, move: '' },
-    playerTwo: { name: '', move: '' },
-    gameStatus: gameState.INIT
-  });
-  gameIndex++; //TODO: change to ULID / UUID
-  return gameIndex - 1;
 };
