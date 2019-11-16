@@ -7,7 +7,7 @@ exports.helloBaby = (req, res, next) => {
 };
 
 exports.createNewRpsGame = (req, res, next) => {
-  checkName(req, res, next);
+  checkName(req, res);
   if (!res.headersSent) {
     const newGameId = initiateNewRpsGame(req.query.name);
     res.status(200).json({
@@ -17,36 +17,38 @@ exports.createNewRpsGame = (req, res, next) => {
 };
 
 exports.joinGame = (req, res, next) => {
-  checkName(req, res, next);
-  const gameToJoin = getGameById(req.params.id);
-  if (!res.headersSent && !gameToJoin) {
-    res.send(`No game with id ${req.params.id} found!`);
-  } else if (gameToJoin.playerTwo.length > 0) {
-    res
-      .status(401)
-      .json({ error: `Game ${req.params.id} is full. Try join another game!` });
-  } else {
-    gameToJoin.playerTwo = req.query.name;
-    gameToJoin.gameStatus = 'Waiting for both players moves.';
+  checkName(req, res);
+  if (!res.headersSent) {
+    const gameToJoin = getGameById(req.params.id, res);
     if (!res.headersSent) {
-      res.status(200).json({
-        message: `Welcome to game ${req.params.id}, ${req.query.name}!`
-      });
+      if (gameToJoin.playerTwo.name.length > 0) {
+        res.status(401).json({
+          error: `Game ${req.params.id} is full. Try joining another game!`
+        });
+      } else if (gameToJoin) {
+        addPlayerToGame(gameToJoin, req.query.name, res);
+      }
     }
-  } 
+  }
 };
+
+const addPlayerToGame = (gameToJoin, playerName, res) => {
+  gameToJoin.playerTwo = { name: playerName, move: '' };
+  gameToJoin.gameStatus =
+    'Player two has joined. Waiting for both players moves.';
+  res.status(200).json({
+    message: `Welcome to game ${gameToJoin.id}, ${playerName}!`
+  });
+}
 
 exports.getGameStatus = (req, res, next) => {
-  // checkName(req, res, next);
-  if (!getGameById(req.params.id)) {
-    res.send(`No game with id ${req.params.id} found!`);
-  }
+  const gameToJoin = getGameById(req.params.id, res);
   if (!res.headersSent) {
-    //
+    res.status(200).json({ gameStatus: gameToJoin.gameStatus });
   }
 };
 
-const checkName = (req, res, next) => {
+const checkName = (req, res) => {
   if (!req.query.name) {
     return res.status(400).json({
       error: `Please provide your name as a parameter to create or join a game!`
@@ -54,32 +56,24 @@ const checkName = (req, res, next) => {
   }
 };
 
-const checkGameIdNEWER = gameId => {
-  gameCollection.map(game => {
-    console.log(game.id);
-    console.log(+game.id == +gameId);
-    if (game.id == gameId) {
-      console.log(game);
-      return game;
-    }
-  });
-};
-
-const getGameById = gameId => {
+const getGameById = (gameId, res) => {
   let foundGame = false;
   gameCollection.forEach(game => {
     if (+game.id === +gameId) {
       foundGame = game;
     }
   });
+  if (!foundGame) {
+    res.send(`No game with id ${gameId} found!`);
+  }
   return foundGame;
 };
 
 const initiateNewRpsGame = playerName => {
   gameCollection.push({
     id: gameIndex,
-    playerOne: playerName,
-    playerTwo: '',
+    playerOne: { name: playerName, move: '' },
+    playerTwo: { name: '', move: '' },
     gameStatus: 'Game initated, waiting for player two to join.'
   });
   gameIndex++; //TODO: change to ULID / UUID
@@ -87,22 +81,3 @@ const initiateNewRpsGame = playerName => {
 };
 
 // status 201 = success, resource created
-
-function checkGameIdOLD(req, res, next) {
-  console.log(req.params);
-  if (!req.params.id) {
-    return res.status(404).json({ message: `No game ID provided!` });
-  }
-  const gameId = req.params.id; // Convert to number
-  if (
-    games.map(game => {
-      if (game.id == gameId) {
-        next();
-        // res.json(`ID is ${gameId}`);
-      }
-    })
-  )
-    return res
-      .status(404)
-      .json({ message: `No game with ID ${gameId} found!` });
-}
