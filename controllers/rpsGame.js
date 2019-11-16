@@ -31,7 +31,7 @@ exports.joinGame = (req, res) => {
   validateName(req, res);
   if (!res.headersSent) {
     const gameToJoin = getGameById(req.params.id, res);
-    if (!res.headersSent) {
+    if (!res.headersSent) {   //TODO: Check error handling
       if (gameToJoin.playerTwo.name.length > 0) {
         res.status(401).json({
           error: `Game ${req.params.id} is full. Try joining another game!`
