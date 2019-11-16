@@ -142,7 +142,24 @@ const getFinalGameState = game => {
   if (game.playerOne.move === game.playerTwo.move) {
     return gameState.DRAW; // Its a draw!
   }
-  // TODO: Add rest of checks!
+  return checkWinner(game);
+};
+
+const checkWinner = game => {
+  switch (game.playerOne.move) {
+    case 'rock':
+      return game.playerTwo.move === 'paper'
+        ? gameState.PLAYER_TWO_WON
+        : gameState.PLAYER_ONE_WON;
+    case 'paper':
+      return game.playerTwo.move === 'scissor'
+        ? gameState.PLAYER_TWO_WON
+        : gameState.PLAYER_ONE_WON;
+    case 'scissor':
+      return game.playerTwo.move === 'rock'
+        ? gameState.PLAYER_TWO_WON
+        : gameState.PLAYER_ONE_WON;
+  }
 };
 
 const getGameById = (gameId, res) => {
