@@ -1,11 +1,11 @@
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
+// const bodyParser = require('body-parser');
 const gameRoutes = require('./routes/gameApi.js');
 const generalRoutes = require('./routes/general.js');
 const PORT = process.env.PORT || 3002;
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 // Allow CORS and methods
 app.use((req, res, next) => {
   res.setHeader('Access-Controll-Allow-Origin', '*');
