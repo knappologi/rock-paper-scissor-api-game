@@ -6,7 +6,7 @@ BÖRJA HÄRIFRÅN
 */
 
 // if nothing is found
-router.get('/', (req, res, next) => {
+router.get('/', (req, res) => {
   res.send('<h1>Hello from general route /</h1>');
 });
 
