@@ -2,7 +2,7 @@ Just some notes!
 
 - Add header to responses? text/html vs json?
 - app.use = middleware
-
+- npm package nodemon för restart?
 
 1. Spelare 1 skickar ett request för att skapa ett nytt spel 
 och får tillbaka ett spel-ID från servern. 
@@ -21,3 +21,8 @@ POST /api/games
 POST /api/games/{id}/join 
 POST /api/games/{id}/move 
 GET /api/games/{id} där id kan vara ett UUID. 
+
+// // //
+Added packages:
+- express
+- body-parser
