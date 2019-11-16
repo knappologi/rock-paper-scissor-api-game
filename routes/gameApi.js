@@ -2,6 +2,36 @@ const express = require('express');
 const router = express.Router();
 const gameController = require('../controllers/rpsGame.js');
 
+
+
+
+/*
+POST to /api/games/
+Required: player name.
+Returns: game ID for new RPS game
+*/
+router.post('/', (req, res, next) => {
+  gameController.createNewRpsGame(req, res, next);
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+OLD BELOW 
+*/
+
 const gamesCollection = {
   games: [
     { id: '00', playerOne: 'Bobby', playerTwo: 'Helen' },
@@ -35,11 +65,6 @@ router.get('/', (req, res, next) => {
   res.send('Wow so cute!');
 });
 
-//POST /api/games
-// Skapar ett nytt spel. Ange spelarnamn i request-body:
-router.post('/', (req, res, next) => {
-  gameController.checkName(req, res, next);
-});
 
 //GET api/games/{id}
 // Returnerar ett givet spels nuvarande tillstånd med ingående attribut. Tänk på vilka attribut som ska visas för vem och när.
