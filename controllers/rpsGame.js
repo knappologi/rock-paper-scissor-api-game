@@ -1,23 +1,11 @@
 const gameCollection = require('../data/gameCollection');
 let gameIndex = 1; //TODO: change to ULID / UUID
-const gameMoves = ['rock', 'paper', 'scissor'];
-const gameState = [
-  'In progress. Game initated, waiting for player two to join.',          //0
-  'In progress. Player two has joined. Waiting for both players moves.',  //1
-  'In progress. Waiting for player twos move.',                           //2
-  'In progress. Waiting for player ones move.',                           //3
-  'Game finished. Player one won!',                                       //4
-  'Game finished. Player two won!',                                       //5
-  'Game finished. It\'s a draw!'                                          //6
-];
-
-exports.helloBaby = (req, res, next) => {
-  gameCollection.push({ item: 'a new item' });
-  res.status(200).json({ message: 'hello baby', data: gameCollection });
-};
+const rpsValues = require('./rpsValues');
+const gameMoves = rpsValues.rpsGameMoves;
+const gameState = rpsValues.rpsGameState;
 
 exports.createNewRpsGame = (req, res, next) => {
-  checkName(req, res);
+  validateName(req, res);
   if (!res.headersSent) {
     const newGameId = initiateNewRpsGame(req.query.name);
     res.status(201).json({
@@ -28,7 +16,7 @@ exports.createNewRpsGame = (req, res, next) => {
 };
 
 exports.joinGame = (req, res, next) => {
-  checkName(req, res);
+  validateName(req, res);
   if (!res.headersSent) {
     const gameToJoin = getGameById(req.params.id, res);
     if (!res.headersSent) {
@@ -45,7 +33,7 @@ exports.joinGame = (req, res, next) => {
 
 const addPlayerToGame = (gameToJoin, playerName, res) => {
   gameToJoin.playerTwo = { name: playerName, move: '' };
-  gameToJoin.gameStatus = gameState[1];
+  gameToJoin.gameStatus = gameState.WAITING_FOR_MOVES;
   res.status(200).json({
     message: `Welcome to game ${gameToJoin.id}, ${playerName}!`
   });
@@ -67,22 +55,21 @@ exports.addMove = (req, res) => {
   const game = getGameById(req.params.id, res);
   if (!res.headersSent) {
     if (
-      game.gameStatus === gameState[1] ||
-      game.gameStatus === gameState[2] ||
-      game.gameStatus === gameState[3]
+      game.gameStatus === gameState.WAITING_FOR_MOVES ||
+      game.gameStatus === gameState.WAITING_FOR_PLAYER_ONE_MOVE ||
+      game.gameStatus === gameState.WAITING_FOR_PLAYER_TWO_MOVE
     ) {
-      checkMove(req, res);
+      validateMove(req, res);
       if (!res.headersSent) {
         const player = validatePlayer(req, res, game);
-        if (player === 0) {
+        if (player === '') {
           res.status(401).json({
             error: `Invalid player for game ${game.id}: ${req.query.name}`,
             gameId: game.id,
             gameStatus: game.gameStatus
           });
         } else {
-          const playerToAddMove = player === 1 ? game.playerOne : game.playerTwo;
-          addPlayerMove(playerToAddMove, res, req.query.move, game);
+          addPlayerMove(player, res, req.query.move, game);
         }
       }
     } else {
@@ -96,14 +83,14 @@ exports.addMove = (req, res) => {
 };
 
 const validatePlayer = (req, res, game) => {
-  checkName(req, res);
+  validateName(req, res);
   if (!res.headersSent) {
     if (game.playerOne.name === req.query.name) {
-      return 1;
+      return game.playerOne;
     } else if (game.playerTwo.name === req.query.name) {
-      return 2;
+      return game.playerTwo;
     } else {
-      return 0;
+      return '';
     }
   }
 };
@@ -118,29 +105,32 @@ const addPlayerMove = (player, res, move, game) => {
   } else {
     player.move = move;
     validateGameState(res, game);
-    res.status(200).json({message: 'Your move has been recorded.'})
+    res.status(200).json({ message: 'Your move has been recorded.' });
   }
 };
 
 const validateGameState = (res, game) => {
   if (game.playerOne.move.length > 0 && game.playerTwo.move.length === 0) {
-    game.gameStatus = gameState[2];
-  } else if (game.playerOne.move.length === 0 && game.playerTwo.move.length > 0) {
-    game.gameStatus = gameState[3];
+    game.gameStatus = gameState.WAITING_FOR_PLAYER_TWO_MOVE;
+  } else if (
+    game.playerOne.move.length === 0 &&
+    game.playerTwo.move.length > 0
+  ) {
+    game.gameStatus = gameState.WAITING_FOR_PLAYER_ONE_MOVE;
   } else {
-    game.gameStatus = checkPlayerMoves(game);
+    game.gameStatus = getFinalGameState(game);
   }
-}
+};
 
-const checkName = (req, res) => {
+const validateName = (req, res) => {
   if (!req.query.name) {
     return res.status(400).json({
-      error: `Please provide your name as a parameter to create or join a game!`
+      error: `Please provide your name as a parameter to create, join or make a move for a game!`
     });
   }
 };
 
-const checkMove = (req, res) => {
+const validateMove = (req, res) => {
   if (!req.query.move || !gameMoves.includes(req.query.move.toLowerCase())) {
     return res.status(400).json({
       error: `Please provide a valid move (rock, paper or scissor) as a parameter.`
@@ -148,16 +138,16 @@ const checkMove = (req, res) => {
   }
 };
 
-const checkPlayerMoves = (game) => {
-  console.log('in checkPlayerMove')
+const getFinalGameState = game => {
   if (game.playerOne.move === game.playerTwo.move) {
-    return gameState[6]; // Its a draw!
+    return gameState.DRAW; // Its a draw!
   }
-}
+  // TODO: Add rest of checks!
+};
 
 const getGameById = (gameId, res) => {
   let foundGame = false;
-  gameCollection.forEach(game => {
+  gameCollection.map(game => {
     if (+game.id === +gameId) {
       foundGame = game;
     }
@@ -173,7 +163,7 @@ const initiateNewRpsGame = playerName => {
     id: gameIndex,
     playerOne: { name: playerName, move: '' },
     playerTwo: { name: '', move: '' },
-    gameStatus: gameState[0]
+    gameStatus: gameState.INIT
   });
   gameIndex++; //TODO: change to ULID / UUID
   return gameIndex - 1;
