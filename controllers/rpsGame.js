@@ -15,7 +15,7 @@ exports.createNewRpsGame = (req, res) => {
   }
 };
 
-exports.getGameStatus = (req, res, next) => {
+exports.getGameStatus = (req, res) => {
   const gameToJoin = getGameById(req.params.id, res);
   if (!res.headersSent) {
     res.status(200).json({
@@ -27,7 +27,7 @@ exports.getGameStatus = (req, res, next) => {
   }
 };
 
-exports.joinGame = (req, res, next) => {
+exports.joinGame = (req, res) => {
   validateName(req, res);
   if (!res.headersSent) {
     const gameToJoin = getGameById(req.params.id, res);
@@ -41,14 +41,6 @@ exports.joinGame = (req, res, next) => {
       }
     }
   }
-};
-
-const addPlayerToGame = (gameToJoin, playerName, res) => {
-  gameToJoin.playerTwo = { name: playerName, move: '' };
-  gameToJoin.gameStatus = gameState.WAITING_FOR_MOVES;
-  res.status(200).json({
-    message: `Welcome to game ${gameToJoin.id}, ${playerName}!`
-  });
 };
 
 exports.addMove = (req, res) => {
@@ -137,6 +129,14 @@ const initiateNewRpsGame = playerName => {
   });
   gameIndex++; //TODO: change to ULID / UUID
   return gameIndex - 1;
+};
+
+const addPlayerToGame = (gameToJoin, playerName, res) => {
+  gameToJoin.playerTwo = { name: playerName, move: '' };
+  gameToJoin.gameStatus = gameState.WAITING_FOR_MOVES;
+  res.status(200).json({
+    message: `Welcome to game ${gameToJoin.id}, ${playerName}!`
+  });
 };
 
 const getGameById = (gameId, res) => {
