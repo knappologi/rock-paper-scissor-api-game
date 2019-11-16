@@ -16,7 +16,23 @@ router.post('/', (req, res, next) => {
 
 
 
+/*
+POST /api/games/{id}/join 
+Required: valid game ID and player name.
+Returns: success message or error message (bad request)
+*/
+router.post('/:id/join', (req, res, next) => {
+  gameController.joinGame(req, res, next);
+});
 
+/*
+GET /api/games/{id}/join 
+Required: valid game ID and player name.
+Returns: success message or error message (bad request)
+*/
+router.get('/:id', (req, res, next) => {
+  gameController.getGameStatus(req, res, next);
+});
 
 
 
@@ -66,34 +82,6 @@ router.get('/', (req, res, next) => {
 });
 
 
-//GET api/games/{id}
-// Returnerar ett givet spels nuvarande tillstånd med ingående attribut. Tänk på vilka attribut som ska visas för vem och när.
-router.get('/:id', (req, res, next) => {
-  checkGameId(req, res, next);
-  return res.send('Game found, but nothing here yet!');
-
-  /* const gameId = req.params.id;      
-    if (gamesCollection.games.map(game => {
-        if (game.id == gameId) {
-            res.json(`ID is ${gameId}`);
-        }
-    })) */
-  //  return res.status(404).json({message: `No game with ID ${req.params.id} found!`});
-});
-
-router.get('/hello', (req, res, next) => {
-   // checkGameId(req, res, next);
-    return res.send('Game found, but nothing here yet!');
-  
-    /* const gameId = req.params.id;      
-      if (gamesCollection.games.map(game => {
-          if (game.id == gameId) {
-              res.json(`ID is ${gameId}`);
-          }
-      })) */
-    //  return res.status(404).json({message: `No game with ID ${req.params.id} found!`});
-  });
-  
 
 // POST /api/games/{id}/join
 // Ansluter till ett spel med givet ID. Ange spelarnamn i request-body:
