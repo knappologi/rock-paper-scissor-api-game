@@ -9,21 +9,31 @@ exports.createNewRpsGame = (req, res) => {
   if (!res.headersSent) {
     const newGameId = initiateNewRpsGame(req.query.name, res);
     res.status(200).json({
-      message: `Send the following url to a friend to join with a POST-request: http://localhost:3002/api/games/${newGameId}/join`,
-      gameId: newGameId
+      message: `Send the following url to a friend to join with a POST-request and their name as a parameter: http://localhost:3002/api/games/${newGameId}/join`,
+      id: newGameId
     });
   }
 };
 
 exports.getGameStatus = (req, res) => {
-  const gameToJoin = getGameById(req.params.id, res);
+  const game = getGameById(req.params.id, res);
   if (!res.headersSent) {
-    res.status(200).json({
-      gameId: gameToJoin.id,
-      gameStatus: gameToJoin.gameStatus,
-      playerOne: gameToJoin.playerOne.name,
-      playerTwo: gameToJoin.playerTwo.name
-    });
+    // If the game is finished, send all data
+    if (
+      game.gameStatus === gameState.DRAW ||
+      game.gameStatus === gameState.PLAYER_ONE_WON ||
+      game.gameStatus === gameState.PLAYER_TWO_WON
+    ) {
+      res.status(200).json(game);
+      // Else, only show game Id, game status and player names.
+    } else {
+      res.status(200).json({
+        id: game.id,
+        gameStatus: game.gameStatus,
+        playerOne: game.playerOne.name,
+        playerTwo: game.playerTwo.name
+      });
+    }
   }
 };
 
@@ -32,7 +42,6 @@ exports.joinGame = (req, res) => {
   if (!res.headersSent) {
     const gameToJoin = getGameById(req.params.id, res);
     if (!res.headersSent) {
-      //TODO: Check error handling
       if (gameToJoin.playerTwo.name.length > 0) {
         res.status(401).json({
           error: `Game ${req.params.id} is full. Try joining another game!`
@@ -69,7 +78,7 @@ exports.addMove = (req, res) => {
     } else {
       res.status(401).json({
         error: `Invalid game state: ${game.gameStatus}`,
-        gameId: game.id,
+        id: game.id,
         gameStatus: game.gameStatus
       });
     }
@@ -160,7 +169,7 @@ const getGameById = (gameId, res) => {
     });
   }
   if (!foundGame) {
-    res.status(404).json({error: `No game with id ${gameId} found!`});
+    res.status(404).json({ error: `No game with id ${gameId} found!` });
   }
   return foundGame;
 };
@@ -193,7 +202,7 @@ const addPlayerMove = (player, res, move, game) => {
   if (player.move.length > 0) {
     res.status(401).json({
       error: `You've already made a move in this game!`,
-      gameId: game.id,
+      id: game.id,
       gameStatus: game.gameStatus
     });
   } else {

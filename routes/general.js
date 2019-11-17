@@ -1,20 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-/*
-BÖRJA HÄRIFRÅN
-*/
-
-// if nothing is found
 router.get('/', (req, res) => {
-  res.send('<h1>Hello from general route /</h1>');
+  res
+    .status(200)
+    .json({ message: 'Hello, world! GET /api/games/help for more info :)' });
 });
 
-/*
 // if nothing is found
-router.use((req, res, next) => {
-    res.status(404).send('<h2>404: Nothing here!</h2>');    //TODO: gör något snyggare här
-})
-*/
+router.use((req, res) => {
+  res.status(404).json({ error: '404. Nothing here!' });
+});
 
 module.exports = router;
