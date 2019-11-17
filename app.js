@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-// const bodyParser = require('body-parser');
 const gameRoutes = require('./routes/gameApi.js');
 const generalRoutes = require('./routes/general.js');
 const PORT = process.env.PORT || 3002;

@@ -25,4 +25,8 @@ GET /api/games/{id} där id kan vara ett UUID.
 // // //
 Added packages:
 - express
-- body-parser
+- UUID
+DEV:
+- nodemon
+- eslint
+
