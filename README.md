@@ -51,7 +51,11 @@ Required parameters: name and move. The name must match one of the games player.
 
 **GET /api/games/{id}**
 
-Returns: game Id, game status, name of player one and two. Example: `http://localhost:3002/api/games/001/`
+Returns: if the game is in progress it will return with game Id, game status, name of player one and two. If the game is finished the players moves are included aswell. Example: `http://localhost:3002/api/games/001/`
+
+**GET /api/games/help**
+
+Returns: message with available requests. Example: `http://localhost:3002/api/games/help`
 
 ## Development & details
 ### Dependencies
