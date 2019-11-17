@@ -24,11 +24,11 @@ To run tests:
 ## Play the game
 To play the game, the players can send HTTP requests to the server. HTTP requests can be sent using tools like Postman - https://www.getpostman.com/downloads/ or curl - https://curl.haxx.se/download.html
 
-To create a game, use a POST request with your name as a parameter to /api/games/.
+1. To create a game, use a POST request with your name as a parameter to /api/games/.
 
-Player two can then join the game through a POST request to /api/games/{id}/join with their name.
+1. Player two can then join the game through a POST request to /api/games/{id}/join with their name.
 
-Moves are made through POST requests to /api/games/{id}/move where name and move are required parameters. Valid moves are rock, paper, scissor. 
+1. Moves are made through POST requests to /api/games/{id}/move where name and move are required parameters. Valid moves are rock, paper, scissor. 
 
 The status of the game can be fetched any time during the game through a GET request to /api/games/{id}
 
@@ -70,5 +70,5 @@ The server is run through app.js. Game logic can be found within the controller 
 
 ### Possible future improvements
 * Store the game data in a database
-* Use ULID instead of UUID for more URL-friendly game IDs
+* Use ULID or shortid instead of UUID for more URL-friendly game IDs
 * Add more tests
