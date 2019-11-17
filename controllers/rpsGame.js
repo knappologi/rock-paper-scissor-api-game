@@ -1,5 +1,5 @@
+const uuid = require('uuid/v4');
 const gameCollection = require('../data/gameCollection');
-let gameIndex = 1; //TODO: change to ULID / UUID
 const rpsValues = require('./rpsValues');
 const gameMoves = rpsValues.rpsGameMoves;
 const gameState = rpsValues.rpsGameState;
@@ -31,7 +31,8 @@ exports.joinGame = (req, res) => {
   validateName(req, res);
   if (!res.headersSent) {
     const gameToJoin = getGameById(req.params.id, res);
-    if (!res.headersSent) {   //TODO: Check error handling
+    if (!res.headersSent) {
+      //TODO: Check error handling
       if (gameToJoin.playerTwo.name.length > 0) {
         res.status(401).json({
           error: `Game ${req.params.id} is full. Try joining another game!`
@@ -76,10 +77,10 @@ exports.addMove = (req, res) => {
 };
 
 const validateGameState = (res, game) => {
-  if (game.playerOne.move.length > 0 && game.playerTwo.move.length === 0) {
+  if (game.playerOne.move.length > 0 && game.playerTwo.move === '') {
     game.gameStatus = gameState.WAITING_FOR_PLAYER_TWO_MOVE;
   } else if (
-    game.playerOne.move.length === 0 &&
+    game.playerOne.move === '' &&
     game.playerTwo.move.length > 0
   ) {
     game.gameStatus = gameState.WAITING_FOR_PLAYER_ONE_MOVE;
@@ -121,14 +122,14 @@ const validatePlayer = (req, res, game) => {
 };
 
 const initiateNewRpsGame = playerName => {
+  const newGameId = uuid();
   gameCollection.push({
-    id: gameIndex,
+    id: newGameId,
     playerOne: { name: playerName, move: '' },
     playerTwo: { name: '', move: '' },
     gameStatus: gameState.INIT
   });
-  gameIndex++; //TODO: change to ULID / UUID
-  return gameIndex - 1;
+  return newGameId;
 };
 
 const addPlayerToGame = (gameToJoin, playerName, res) => {
@@ -142,7 +143,7 @@ const addPlayerToGame = (gameToJoin, playerName, res) => {
 const getGameById = (gameId, res) => {
   let foundGame = false;
   gameCollection.map(game => {
-    if (+game.id === +gameId) {
+    if (game.id === gameId) {
       foundGame = game;
     }
   });
@@ -186,6 +187,6 @@ const addPlayerMove = (player, res, move, game) => {
   } else {
     player.move = move;
     validateGameState(res, game);
-    res.status(200).json({ message: `Your move has been recorded.` });
+    res.status(200).json({ message: `Your move (${move}) has been recorded.` });
   }
 };
