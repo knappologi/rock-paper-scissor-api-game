@@ -7,7 +7,7 @@ const gameState = rpsValues.rpsGameState;
 exports.createNewRpsGame = (req, res) => {
   validateName(req, res);
   if (!res.headersSent) {
-    const newGameId = initiateNewRpsGame(req.query.name);
+    const newGameId = initiateNewRpsGame(req.query.name, res);
     res.status(201).json({
       message: `Send the following url to a friend to join with a POST-request: http://localhost:3002/api/games/${newGameId}/join`,
       gameId: newGameId
@@ -79,10 +79,7 @@ exports.addMove = (req, res) => {
 const validateGameState = (res, game) => {
   if (game.playerOne.move.length > 0 && game.playerTwo.move === '') {
     game.gameStatus = gameState.WAITING_FOR_PLAYER_TWO_MOVE;
-  } else if (
-    game.playerOne.move === '' &&
-    game.playerTwo.move.length > 0
-  ) {
+  } else if (game.playerOne.move === '' && game.playerTwo.move.length > 0) {
     game.gameStatus = gameState.WAITING_FOR_PLAYER_ONE_MOVE;
   } else {
     game.gameStatus = getFinalGameState(game);
@@ -121,15 +118,22 @@ const validatePlayer = (req, res, game) => {
   }
 };
 
-const initiateNewRpsGame = playerName => {
+const initiateNewRpsGame = (playerName, res) => {
   const newGameId = uuid();
-  gameCollection.push({
-    id: newGameId,
-    playerOne: { name: playerName, move: '' },
-    playerTwo: { name: '', move: '' },
-    gameStatus: gameState.INIT
-  });
-  return newGameId;
+  try {
+    gameCollection.push({
+      id: newGameId,
+      playerOne: { name: playerName, move: '' },
+      playerTwo: { name: '', move: '' },
+      gameStatus: gameState.INIT
+    });
+    return newGameId;
+  } catch (error) {
+    console.trace(error);
+    return res.status(500).json({
+      error: `Oh no, something went wrong! Failed to create a new game.`
+    });
+  }
 };
 
 const addPlayerToGame = (gameToJoin, playerName, res) => {
@@ -142,13 +146,21 @@ const addPlayerToGame = (gameToJoin, playerName, res) => {
 
 const getGameById = (gameId, res) => {
   let foundGame = false;
-  gameCollection.map(game => {
-    if (game.id === gameId) {
-      foundGame = game;
-    }
-  });
+  try {
+    gameCollection.map(game => {
+      if (game.id === gameId) {
+        foundGame = game;
+      }
+    });
+  } catch (error) {
+    // In case something went wrong with gameCollection or fetching game, catch and log error
+    console.trace(error);
+    return res.status(500).json({
+      error: `Oh no, something went wrong! Failed to fetch game ID ${gameId}.`
+    });
+  }
   if (!foundGame) {
-    res.send(`No game with id ${gameId} found!`);
+    res.status(404).json({message: `No game with id ${gameId} found!`});
   }
   return foundGame;
 };
