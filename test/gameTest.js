@@ -1,8 +1,7 @@
-const expect = require('chai').expect;
-const app = require('../app.js');
 const chai = require('chai');
+const expect = require('chai').expect;
 const chaiHttp = require('chai-http');
-//const gameController = require('../controllers/rpsGame.js');
+const app = require('../app.js');
 const gameCollection = require('../data/gameCollection.js');
 const gameValues = require('../controllers/rpsValues.js');
 
@@ -209,12 +208,26 @@ describe('Tests for POST /api/games/{id}/move', () => {
   });
 
   it('should return 404 due to missing move param', done => {
-    //TODO: inte klar
     const game = gameCollection[0];
     chai
       .request(app)
       .post(`/api/games/${game.id}/move`)
       .query({ name: `${game.playerOne.name}` })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.be.json;
+        expect(res.body).to.have.property('error');
+        expect(res).to.have.status(404);
+        done();
+      });
+  });
+
+  it('should return 404 due to invalid move param', done => {
+    const game = gameCollection[0];
+    chai
+      .request(app)
+      .post(`/api/games/${game.id}/move`)
+      .query({ name: `${game.playerOne.name}`, move: 'nothing' })
       .end((err, res) => {
         expect(err).to.be.null;
         expect(res).to.be.json;
