@@ -8,7 +8,7 @@ exports.createNewRpsGame = (req, res) => {
   validateName(req, res);
   if (!res.headersSent) {
     const newGameId = initiateNewRpsGame(req.query.name, res);
-    res.status(201).json({
+    res.status(200).json({
       message: `Send the following url to a friend to join with a POST-request: http://localhost:3002/api/games/${newGameId}/join`,
       gameId: newGameId
     });

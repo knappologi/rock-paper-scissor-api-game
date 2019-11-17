@@ -17,3 +17,5 @@ app.use(generalRoutes);
 app.listen(PORT, () =>
   console.log(`Rock, paper, scissor API game is running on ${PORT}. `)
 );
+
+module.exports = app
