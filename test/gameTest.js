@@ -24,7 +24,7 @@ describe('Tests for POST /api/games', () => {
       });
   });
 
-  it('should return 400 status response due to missing name parameter', done => {
+  it('should return 404 status response due to missing name parameter', done => {
     chai
       .request(app)
       .post('/api/games')
@@ -32,7 +32,7 @@ describe('Tests for POST /api/games', () => {
         expect(err).to.be.null;
         expect(res).to.be.json;
         expect(res.body).to.have.property('error');
-        expect(res).to.have.status(400);
+        expect(res).to.have.status(404);
         done();
       });
   });
@@ -69,7 +69,7 @@ describe('Tests for GET /api/games/{id}', () => {
       .end((err, res) => {
         expect(err).to.be.null;
         expect(res).to.be.json;
-        expect(res.body).to.have.property('message');
+        expect(res.body).to.have.property('error');
         expect(res).to.have.status(404);
         done();
       });
@@ -113,13 +113,13 @@ describe('Tests for POST /api/games/{id}/join', () => {
       .end((err, res) => {
         expect(err).to.be.null;
         expect(res).to.be.json;
-        expect(res.body).to.have.property('message');
+        expect(res.body).to.have.property('error');
         expect(res).to.have.status(404);
         done();
       });
   });
 
-  it('should return 400 status response for invalid game id and without name param', done => {
+  it('should return 404 status response for invalid game id and without name param', done => {
     chai
       .request(app)
       .post('/api/games/2/join') // Invalid id as gamecontroller generates UUID
@@ -127,12 +127,12 @@ describe('Tests for POST /api/games/{id}/join', () => {
         expect(err).to.be.null;
         expect(res).to.be.json;
         expect(res.body).to.have.property('error');
-        expect(res).to.have.status(400);
+        expect(res).to.have.status(404);
         done();
       });
   });
 
-  it('should return 400 when game id is valid but name is missing', done => {
+  it('should return 404 when game id is valid but name is missing', done => {
     const gameId = gameCollection[0].id;
     chai
       .request(app)
@@ -141,7 +141,7 @@ describe('Tests for POST /api/games/{id}/join', () => {
         expect(err).to.be.null;
         expect(res).to.be.json;
         expect(res.body).to.have.property('error');
-        expect(res).to.have.status(400);
+        expect(res).to.have.status(404);
         done();
       });
   });
@@ -178,87 +178,82 @@ describe('Tests for POST /api/games/{id}/join', () => {
 });
 
 describe('Tests for POST /api/games/{id}/move', () => {
-    it('should return 404 due to invalid game id', done => {
-        chai
-          .request(app)
-          .post(`/api/games/2/move`)
-          .query({ name: 'new player', move: 'rock'})
-          .query({ move: 'rock' })
-          .end((err, res) => {
-            expect(err).to.be.null;
-            expect(res).to.be.json;
-            expect(res.body).to.have.property('message');
-            expect(res).to.have.status(404);
-            done();
-          });
+  it('should return 404 due to invalid game id', done => {
+    chai
+      .request(app)
+      .post(`/api/games/2/move`)
+      .query({ name: 'new player', move: 'rock' })
+      .query({ move: 'rock' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.be.json;
+        expect(res.body).to.have.property('error');
+        expect(res).to.have.status(404);
+        done();
       });
+  });
 
-      it('should return 400 due to missing name param', done => {
-        const gameId = gameCollection[0].id;
-        chai
-          .request(app)
-          .post(`/api/games/${gameId}/move`)
-          .query({move: 'rock'})
-          .end((err, res) => {
-            expect(err).to.be.null;
-            expect(res).to.be.json;
-            expect(res.body).to.have.property('error');
-            expect(res).to.have.status(400);
-            done();
-          });
+  it('should return 404 due to missing name param', done => {
+    const gameId = gameCollection[0].id;
+    chai
+      .request(app)
+      .post(`/api/games/${gameId}/move`)
+      .query({ move: 'rock' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.be.json;
+        expect(res.body).to.have.property('error');
+        expect(res).to.have.status(404);
+        done();
       });
+  });
 
-      it('should return 400 due to missing move param', done => {   //TODO: inte klar
-        const game = gameCollection[0];
-        chai
-          .request(app)
-          .post(`/api/games/${game.id}/move`)
-          .query({name: `${game.playerOne.name}`})
-          .end((err, res) => {
-            expect(err).to.be.null;
-            expect(res).to.be.json;
-            expect(res.body).to.have.property('error');
-            expect(res).to.have.status(400);
-            done();
-          });
+  it('should return 404 due to missing move param', done => {
+    //TODO: inte klar
+    const game = gameCollection[0];
+    chai
+      .request(app)
+      .post(`/api/games/${game.id}/move`)
+      .query({ name: `${game.playerOne.name}` })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.be.json;
+        expect(res.body).to.have.property('error');
+        expect(res).to.have.status(404);
+        done();
       });
+  });
 
-      it('should return 401 due invalid player name for the game', done => {
-        const gameId = gameCollection[0].id;
-        chai
-          .request(app)
-          .post(`/api/games/${gameId}/move`)
-          .query({name: 'invalid player', move: 'rock'})
-          .end((err, res) => {
-            expect(err).to.be.null;
-            expect(res).to.be.json;
-            expect(res.body).to.have.property('error');
-            expect(res.body).to.have.property('gameId');
-            expect(res.body).to.have.property('gameStatus');
-            expect(res).to.have.status(401);
-            done();
-          });
+  it('should return 401 due invalid player name for the game', done => {
+    const gameId = gameCollection[0].id;
+    chai
+      .request(app)
+      .post(`/api/games/${gameId}/move`)
+      .query({ name: 'invalid player', move: 'rock' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.be.json;
+        expect(res.body).to.have.property('error');
+        expect(res.body).to.have.property('gameId');
+        expect(res.body).to.have.property('gameStatus');
+        expect(res).to.have.status(401);
+        done();
       });
+  });
 
-      it('should record a move', done => {
-        const game = gameCollection[0];
-        chai
-          .request(app)
-          .post(`/api/games/${game.id}/move`)
-          .query({name: game.playerOne.name, move: 'rock'})
-          .end((err, res) => {
-            expect(err).to.be.null;
-            expect(res).to.be.json;
-            expect(res.body).to.have.property('message');
-            expect(res).to.have.status(200);
-            expect(game.playerOne.move).to.equal('rock');
-            done();
-          });
+  it('should record a move', done => {
+    const game = gameCollection[0];
+    chai
+      .request(app)
+      .post(`/api/games/${game.id}/move`)
+      .query({ name: game.playerOne.name, move: 'rock' })
+      .end((err, res) => {
+        expect(err).to.be.null;
+        expect(res).to.be.json;
+        expect(res.body).to.have.property('message');
+        expect(res).to.have.status(200);
+        expect(game.playerOne.move).to.equal('rock');
+        done();
       });
-
-
-
-
-
-
+  });
 });

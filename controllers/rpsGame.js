@@ -88,7 +88,7 @@ const validateGameState = (res, game) => {
 
 const validateMove = (req, res) => {
   if (!req.query.move || !gameMoves.includes(req.query.move.toLowerCase())) {
-    res.status(400).json({
+    res.status(404).json({
       error: `Please provide a valid move (rock, paper or scissor) as a parameter.`
     });
     return false;
@@ -99,7 +99,7 @@ const validateMove = (req, res) => {
 
 const validateName = (req, res) => {
   if (!req.query.name) {
-    return res.status(400).json({
+    return res.status(404).json({
       error: `Please provide your name as a parameter to create, join or make a move for a game!`
     });
   }
@@ -160,7 +160,7 @@ const getGameById = (gameId, res) => {
     });
   }
   if (!foundGame) {
-    res.status(404).json({message: `No game with id ${gameId} found!`});
+    res.status(404).json({error: `No game with id ${gameId} found!`});
   }
   return foundGame;
 };
